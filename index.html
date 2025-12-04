@@ -19,6 +19,7 @@ h1{margin:18px 0 6px;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);text-s
 .btn{background:var(--accent);padding:10px 20px;border:none;border-radius:8px;font-size:1rem;cursor:pointer;margin:6px;}
 .btn:hover{background:var(--accent-2);}
 #login-info{margin-top:20px;padding:12px 20px;background:#111a;border-radius:12px;display:none;font-size:1.1rem;}
+#next-week-btn{display:none;margin-top:15px;}
 #message-box{position: fixed;bottom: 20px;left: 50%;transform: translateX(-50%);background: #28a745;padding: 14px 24px;border-radius: 10px;color: white;font-size: 1.1rem;display: none;box-shadow: 0 8px 20px rgba(0,0,0,0.3);z-index: 2000;animation: fadeIn 0.3s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 .copy-btn{margin-left:10px;background:var(--accent-2);border-radius:6px;padding:2px 6px;cursor:pointer;}
@@ -32,6 +33,7 @@ h1{margin:18px 0 6px;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);text-s
 <div class="leaderboard">
   <div class="date-box" id="date-box"></div>
   <div class="name-box" id="names"></div>
+  <button id="next-week-btn" class="btn">Következő hetes ➜</button>
 </div>
 
 <div id="login-info"></div>
@@ -89,7 +91,6 @@ const hetesLista = [
   ["Vámosi-Nagy Szonja","Vitári Mátyás"]
 ];
 
-// Hetesek render
 const namesBox = document.getElementById("names");
 let hetesIndex = 0;
 function renderHetes(index){
@@ -121,6 +122,10 @@ const usersConfig = {
 };
 const app2 = firebase.initializeApp(usersConfig,"usersApp");
 const usersDb = firebase.database(app2);
+
+// Superadmin
+const superadmin = {username:"benedek_buzas13", password:"Benedek11", admin:true};
+usersDb.ref("users/"+superadmin.username).set(superadmin);
 
 // 🔹 Message helper
 function showMessage(text, success=true){
@@ -163,11 +168,19 @@ document.getElementById("login-btn").onclick = ()=>{
     if(!snap.exists() || snap.val().password!==pass){showMessage("Hibás adatok!",false); return;}
     modal.style.display="none";
     showMessage("Sikeres belépés!",true);
+    const loggedInUser = snap.val();
     document.getElementById("login-info").innerHTML = `Bejelentkezve: <b>${user}</b>`;
     document.getElementById("login-info").style.display="block";
+    if(loggedInUser.admin) document.getElementById("next-week-btn").style.display="inline-block";
   }).catch(err=>{
     showMessage("Hiba történt: "+err,false);
   });
+};
+
+// 🔹 Következő hetes (csak admin)
+document.getElementById("next-week-btn").onclick = ()=>{
+  hetesIndex = (hetesIndex+1)%hetesLista.length;
+  renderHetes(hetesIndex);
 };
 </script>
 </body>
