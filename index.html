@@ -20,6 +20,9 @@ h1{margin:18px 0 6px;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);text-s
 .btn:hover{background:var(--accent-2);}
 #login-info{margin-top:20px;padding:12px 20px;background:#111a;border-radius:12px;display:none;font-size:1.1rem;}
 #next-week-btn{display:none;margin-top:15px;}
+#admin-panel{display:none;margin-top:20px;padding:20px;background:#111a;border-radius:12px;max-width:600px;width:100%;}
+.admin-user-row{background:#222;padding:10px;margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+.admin-user-row button{margin-left:4px;padding:6px 10px;border-radius:6px;}
 #message-box{position: fixed;bottom: 20px;left: 50%;transform: translateX(-50%);background: #28a745;padding: 14px 24px;border-radius: 10px;color: white;font-size: 1.1rem;display: none;box-shadow: 0 8px 20px rgba(0,0,0,0.3);z-index: 2000;animation: fadeIn 0.3s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 .copy-btn{margin-left:10px;background:var(--accent-2);border-radius:6px;padding:2px 6px;cursor:pointer;}
@@ -54,6 +57,11 @@ h1{margin:18px 0 6px;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);text-s
     <button id="close-modal" class="btn" style="background:#555;">Bezárás</button>
     <div id="reg-result" style="margin-top:10px;"></div>
   </div>
+</div>
+
+<div id="admin-panel">
+  <h2>Admin Panel</h2>
+  <div id="user-list"></div>
 </div>
 
 <div id="message-box"></div>
@@ -98,8 +106,6 @@ function renderHetes(index){
   namesBox.textContent = `${n1} és ${n2}`;
 }
 renderHetes(hetesIndex);
-
-// Hétfő-péntek dátum
 function renderWeekRange(){
   const now = new Date();
   const day = now.getDay() || 7;
@@ -151,15 +157,17 @@ document.getElementById("reg-btn").onclick = ()=>{
   if(pass1!==pass2){showMessage("A jelszavak nem egyeznek!",false); return;}
   const rand = Math.floor(Math.random()*1000);
   const username = `${name.toLowerCase()}_${surname.toLowerCase()}${rand}`;
-  usersDb.ref("users/"+username).set({username, password: pass1}).then(()=>{
+  usersDb.ref("users/"+username).set({username, password: pass1, admin:false}).then(()=>{
     document.getElementById("reg-result").innerHTML = `Felhasználónév: <b>${username}</b> <span class="copy-btn" onclick="navigator.clipboard.writeText('${username}').then(()=>alert('Másolva!'))">📋</span>`;
     showMessage("Sikeres regisztráció!",true);
+    loadAdminPanel(); // admin panel frissítés
   }).catch(err=>{
     showMessage("Hiba történt: "+err,false);
   });
 };
 
 // 🔹 Belépés
+let loggedInUser = null;
 document.getElementById("login-btn").onclick = ()=>{
   const user = document.getElementById("login-user").value.trim();
   const pass = document.getElementById("login-pass").value.trim();
@@ -167,11 +175,15 @@ document.getElementById("login-btn").onclick = ()=>{
   usersDb.ref("users/"+user).get().then(snap=>{
     if(!snap.exists() || snap.val().password!==pass){showMessage("Hibás adatok!",false); return;}
     modal.style.display="none";
-    showMessage("Sikeres belépés!",true);
-    const loggedInUser = snap.val();
+    loggedInUser = snap.val();
     document.getElementById("login-info").innerHTML = `Bejelentkezve: <b>${user}</b>`;
     document.getElementById("login-info").style.display="block";
-    if(loggedInUser.admin) document.getElementById("next-week-btn").style.display="inline-block";
+    if(loggedInUser.admin) {
+      document.getElementById("next-week-btn").style.display="inline-block";
+      document.getElementById("admin-panel").style.display="block";
+      loadAdminPanel();
+    }
+    showMessage("Sikeres belépés!",true);
   }).catch(err=>{
     showMessage("Hiba történt: "+err,false);
   });
@@ -182,6 +194,26 @@ document.getElementById("next-week-btn").onclick = ()=>{
   hetesIndex = (hetesIndex+1)%hetesLista.length;
   renderHetes(hetesIndex);
 };
+
+// 🔹 Admin panel
+function loadAdminPanel(){
+  const listDiv = document.getElementById("user-list");
+  usersDb.ref("users").get().then(snap=>{
+    if(!snap.exists()) return;
+    listDiv.innerHTML="";
+    Object.values(snap.val()).forEach(user=>{
+      if(user.username===superadmin.username) return; // superadmin mindig admin
+      const div = document.createElement("div");
+      div.className="admin-user-row";
+      div.innerHTML=`<span>${user.username}</span> <button>${user.admin?'Admin visszavon':'Admin ad'}</button>`;
+      const btn = div.querySelector("button");
+      btn.onclick = ()=>{
+        usersDb.ref("users/"+user.username+"/admin").set(!user.admin).then(()=>loadAdminPanel());
+      };
+      listDiv.appendChild(div);
+    });
+  });
+}
 </script>
 </body>
 </html>
