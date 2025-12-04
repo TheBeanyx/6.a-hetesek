@@ -60,21 +60,23 @@
 
   <div id="message-box"></div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-    // 🔹 Firebase config ide jön (saját projekt)
+    // 🔹 Firebase KONFIG – HELYESEN KITÖLTVE
     const firebaseConfig = {
-      apiKey: "API_KEY",
-      authDomain: "PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "PROJECT_ID",
-      storageBucket: "PROJECT_ID.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
+      apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
+      authDomain: "hetesek6a.firebaseapp.com",
+      databaseURL: "https://hetesek6a-default-rtdb.firebaseio.com",
+      projectId: "hetesek6a",
+      storageBucket: "hetesek6a.firebasestorage.app",
+      messagingSenderId: "62186380462",
+      appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f",
+      measurementId: "G-T4F06D2HMK"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -95,7 +97,7 @@
       namesBox.textContent = `${n1} és ${n2}`;
     }
 
-    // 🔹 Hétfő-péntek dátum
+    // 🔹 Hétfő–péntek dátum
     function renderWeekRange(){
       const now = new Date();
       const day = now.getDay() || 7;
@@ -112,7 +114,7 @@
     const usersRef = db.ref("users");
     const hetesIndexRef = db.ref("hetesIndex");
 
-    // Alap superadmin létrehozása
+    // Superadmin létrehozása
     usersRef.child(superadmin.user).set(superadmin);
 
     function showMessage(text, success=true){
@@ -129,15 +131,19 @@
       box.style.display="block";
       box.innerHTML=`Bejelentkezve: <b>${loggedInUser.user}</b>
         <button id="logout-btn" class="btn" style="margin-left:15px;">Kijelentkezés</button>`;
-      document.getElementById("logout-btn").onclick = ()=>{loggedInUser=null;updateLoginInfo();document.getElementById("next-week-btn").style.display="none";}
+      document.getElementById("logout-btn").onclick = ()=>{
+        loggedInUser=null;
+        updateLoginInfo();
+        document.getElementById("next-week-btn").style.display="none";
+      };
     }
 
-    // 🔹 AUTH MODAL
+    // Modal
     const modal = document.getElementById("auth-modal");
     document.getElementById("login-icon").onclick = ()=>modal.style.display="flex";
     document.getElementById("close-modal").onclick = ()=>modal.style.display="none";
 
-    // 🔹 Hetes index realtime listener
+    // 🔹 Realtime hetes index
     hetesIndexRef.on("value", snap=>{
       if(snap.exists()){
         renderHetes(snap.val());
@@ -146,7 +152,7 @@
       }
     });
 
-    // 🔹 Következő hetes gomb (csak adminok)
+    // 🔹 Következő hetes (admin)
     document.getElementById("next-week-btn").onclick = ()=>{
       hetesIndexRef.transaction(current=>{
         if(current===null) return 0;
@@ -171,11 +177,15 @@
       let u = document.getElementById("login-user").value.trim();
       let p = document.getElementById("login-pass").value.trim();
       usersRef.child(u).get().then(snap=>{
-        if(!snap.exists() || snap.val().pass!==p){showMessage("Hibás adatok!",false); return;}
+        if(!snap.exists() || snap.val().pass!==p){
+          showMessage("Hibás adatok!",false);
+          return;
+        }
         loggedInUser = snap.val();
         modal.style.display = "none";
         updateLoginInfo();
-        if(loggedInUser.admin) document.getElementById("next-week-btn").style.display = "inline-block";
+        if(loggedInUser.admin)
+          document.getElementById("next-week-btn").style.display = "inline-block";
       });
     };
   </script>
