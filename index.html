@@ -1,108 +1,195 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>6.A Hetesek - Felhasználói regisztráció</title>
-  <link rel="icon" href="data:," />
-  <style>
-    body{font-family:"Segoe UI",Tahoma,sans-serif;background:#0a0f1a;color:#fff;padding:20px;}
-    h1,h2{color:#00f6ff;}
-    input{padding:10px;margin:5px 0;border-radius:6px;border:none;width:100%;}
-    .btn{background:#00f6ff;padding:10px 20px;border:none;border-radius:6px;color:#000;font-weight:600;cursor:pointer;margin:5px 0;}
-    .btn:hover{background:#00c8d6;}
-    .user-box{background:#111a;padding:10px;margin:10px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
-    .clipboard{cursor:pointer;margin-left:10px;color:#0ff;}
-    #message-box{background:#28a745;padding:10px;border-radius:6px;margin:10px 0;display:none;}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6.A Hetesek - Firebase</title>
+<link rel="icon" href="data:," />
+<style>
+:root{--bg1:#0a0f1a;--bg2:#1c2a48;--accent:#00f6ff;--accent-2:#00c8d6;}
+body{margin:0;font-family:"Segoe UI",Tahoma,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px;min-height:100vh;box-sizing:border-box;}
+h1{margin:18px 0 6px;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);text-shadow:0 0 14px rgba(0,246,255,0.15);}
+.leaderboard{width:100%;max-width:760px;background:rgba(34,34,34,0.92);border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,246,255,0.06);box-sizing:border-box;text-align:center;font-size:1.3rem;}
+.name-box{margin-top:20px;padding:16px;border-radius:12px;background:#111a;font-size:1.4rem;font-weight:600;letter-spacing:0.5px;box-shadow:0 8px 20px rgba(0,246,255,0.05);}
+.date-box{margin-top:12px;font-size:1.1rem;opacity:0.9;}
+#login-icon{position:fixed;top:14px;right:14px;font-size:1.9rem;background:transparent;border:none;color:var(--accent);cursor:pointer;z-index:999;}
+.modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:1000;overflow:auto;}
+.modal-content {background:#1c1c1c;padding:20px;border-radius:12px;width:90%;max-width:500px;color:white;text-align:center;}
+.modal input {width:90%;padding:10px;margin:8px 0;border-radius:8px;border:none;}
+.btn {background:var(--accent);padding:10px 20px;border:none;border-radius:8px;font-size:1rem;cursor:pointer;margin:6px;}
+.btn:hover {background:var(--accent-2);}
+#admin-panel {display:none;margin-top:20px;padding:20px;background:#111a;border-radius:12px;max-width:600px;width:100%;}
+.admin-user-row {background:#222;padding:10px;margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+.admin-user-row button {margin-left:4px;padding:6px 10px;border-radius:6px;}
+#login-info {margin-top:20px;padding:12px 20px;background:#111a;border-radius:12px;display:none;font-size:1.1rem;}
+#message-box {position: fixed;bottom: 20px;left: 50%;transform: translateX(-50%);background: #28a745;padding: 14px 24px;border-radius: 10px;color: white;font-size: 1.1rem;display: none;box-shadow: 0 8px 20px rgba(0,0,0,0.3);z-index: 2000;animation: fadeIn 0.3s ease;}
+@keyframes fadeIn {from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); }}
+.user-box{background:#111a;padding:10px;margin:10px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+.clipboard{cursor:pointer;margin-left:10px;color:#0ff;}
+</style>
 </head>
 <body>
 
-  <h1>Regisztráció – 6.A Hetesek</h1>
+<button id="login-icon">🔑</button>
+<h1>6.A osztály – Hetesek</h1>
 
-  <div id="reg-form">
-    <input type="text" id="first-name" placeholder="Keresztnév">
-    <input type="text" id="last-name" placeholder="Vezetéknév">
-    <input type="password" id="password" placeholder="Jelszó">
-    <input type="password" id="password2" placeholder="Jelszó megerősítése">
-    <button id="register-btn" class="btn">Regisztráció</button>
+<div class="leaderboard">
+  <div class="date-box" id="date-box"></div>
+  <div class="name-box" id="names"></div>
+  <button id="next-week-btn" class="btn" style="display:none;margin-top:15px;">Következő hetes ➜</button>
+</div>
+
+<div id="login-info"></div>
+<div id="message-box"></div>
+
+<!-- AUTH + REGISZTRÁCIÓ MODAL -->
+<div id="auth-modal" class="modal">
+  <div class="modal-content">
+    <h2>Bejelentkezés / Regisztráció</h2>
+    
+    <!-- BEJELENTKEZÉS -->
+    <h3>Bejelentkezés</h3>
+    <input id="login-user" placeholder="Felhasználónév">
+    <input id="login-pass" type="password" placeholder="Jelszó">
+    <button id="login-btn" class="btn">Belépés</button>
+    
+    <hr>
+
+    <!-- REGISZTRÁCIÓ -->
+    <h3>Regisztráció</h3>
+    <input id="first-name" placeholder="Keresztnév">
+    <input id="last-name" placeholder="Vezetéknév">
+    <input id="reg-pass" type="password" placeholder="Jelszó">
+    <input id="reg-pass2" type="password" placeholder="Jelszó megerősítése">
+    <button id="reg-btn" class="btn">Regisztráció</button>
+    
+    <br><br>
+    <button id="close-modal" class="btn" style="background:#555;">Bezárás</button>
+    
+    <h3>Regisztrált felhasználók</h3>
+    <div id="users-list">Betöltés...</div>
   </div>
+</div>
 
-  <div id="message-box"></div>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <h2>Regisztrált felhasználók</h2>
-  <div id="users-list">Betöltés...</div>
+<script>
+  // 🔹 Firebase konfiguráció – Hetesek
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
+    authDomain: "hetesek6a.firebaseapp.com",
+    databaseURL: "https://hetesek6a-default-rtdb.firebaseio.com",
+    projectId: "hetesek6a",
+    storageBucket: "hetesek6a.appspot.com",
+    messagingSenderId: "62186380462",
+    appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f",
+    measurementId: "G-T4F06D2HMK"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  <!-- Firebase 9 modulok -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  // 🔹 Hetesek lista
+  const hetesLista = [
+    ["Árpási Panni","Bertók Márton"],["Buzás Benedek","Egenhoffer-Végh Edvard"],
+    ["Gamble Elenor Mae","Guardado Alexander Joaquin"],["Hazuga Károly","Hegyháti Rozália"],
+    ["Hommonay Márton","Kiss Trisztán"],["Körössy Gréti","Laki Johanna"],
+    ["Marczali Dion","Papp Márton"],["Parádi Nimród","Radics Tímea"],
+    ["Révész Barnabás","Staudt Márk"],["Tokai-Barak Márk","Szabó Flóra"],
+    ["Vámosi-Nagy Szonja","Vitári Mátyás"]
+  ];
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
-      authDomain: "hetesek6a.firebaseapp.com",
-      databaseURL: "https://hetesek6a-users-default-rtdb.firebaseio.com", // külön DB regisztrált felhasználóknak
-      projectId: "hetesek6a-users",
-      storageBucket: "hetesek6a-users.appspot.com",
-      messagingSenderId: "62186380462",
-      appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f"
-    };
+  const namesBox = document.getElementById("names");
+  function renderHetes(index){const [n1,n2]=hetesLista[index]; namesBox.textContent=`${n1} és ${n2}`;}
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+  function renderWeekRange(){
+    const now=new Date();
+    const day = now.getDay()||7;
+    const monday=new Date(now); monday.setDate(now.getDate()-(day-1));
+    const friday=new Date(monday); friday.setDate(monday.getDate()+4);
+    const f=d=>d.toLocaleDateString("hu-HU",{year:"numeric",month:"long",day:"numeric"});
+    document.getElementById("date-box").textContent=`${f(monday)} – ${f(friday)}`;
+  }
+  renderWeekRange();
 
-    const msgBox = document.getElementById("message-box");
-    const usersList = document.getElementById("users-list");
+  // 🔹 User management Hetesek
+  let loggedInUser = null;
+  const superadmin = {user:"benedek_buzas13", pass:"Benedek11", admin:true};
+  const usersRef = db.ref("users");
+  const hetesIndexRef = db.ref("hetesIndex");
+  usersRef.child(superadmin.user).set(superadmin);
 
-    function showMessage(text, success=true){
-      msgBox.textContent = text;
-      msgBox.style.background = success ? "#28a745" : "#d9534f";
-      msgBox.style.display = "block";
-      setTimeout(()=>msgBox.style.display="none", 3000);
-    }
+  function showMessage(text,success=true){const box=document.getElementById("message-box");box.textContent=text;box.style.background=success?"#28a745":"#d9534f";box.style.display="block";setTimeout(()=>box.style.display="none",2500);}
 
-    function generateUsername(first, last){
-      const random = Math.floor(100+Math.random()*900);
-      return `${first.toLowerCase()}_${last.toLowerCase()}${random}`;
-    }
+  function updateLoginInfo(){
+    const box=document.getElementById("login-info");
+    if(!loggedInUser){box.style.display="none";return;}
+    box.style.display="block";
+    box.innerHTML=`Bejelentkezve: <b>${loggedInUser.user}</b>
+      <button id="logout-btn" class="btn" style="margin-left:15px;">Kijelentkezés</button>`;
+    document.getElementById("logout-btn").onclick=()=>{loggedInUser=null;updateLoginInfo();document.getElementById("next-week-btn").style.display="none";}
+  }
 
-    function renderUsers(){
-      get(ref(db, "users")).then(snap=>{
-        if(!snap.exists()){usersList.innerHTML="Nincs felhasználó.";}
-        else {
-          const data = snap.val();
-          usersList.innerHTML = "";
-          Object.values(data).forEach(user=>{
-            const div = document.createElement("div");
-            div.classList.add("user-box");
-            div.innerHTML = `<span>${user.username}</span>
-                             <span class="clipboard">📋</span>`;
-            const clip = div.querySelector(".clipboard");
-            clip.onclick = ()=>{navigator.clipboard.writeText(user.username); showMessage("Felhasználónév a vágólapra másolva!");}
-            usersList.appendChild(div);
-          });
-        }
-      });
-    }
+  // 🔹 AUTH MODAL
+  const modal=document.getElementById("auth-modal");
+  document.getElementById("login-icon").onclick=()=>modal.style.display="flex";
+  document.getElementById("close-modal").onclick=()=>modal.style.display="none";
 
-    renderUsers();
+  // 🔹 Hetes index realtime listener
+  hetesIndexRef.on("value",snap=>{if(snap.exists()){renderHetes(snap.val());} else{hetesIndexRef.set(0);}});
 
-    document.getElementById("register-btn").onclick = ()=>{
-      const first = document.getElementById("first-name").value.trim();
-      const last = document.getElementById("last-name").value.trim();
-      const pass1 = document.getElementById("password").value;
-      const pass2 = document.getElementById("password2").value;
+  document.getElementById("next-week-btn").onclick=()=>{hetesIndexRef.transaction(current=>{if(current===null) return 0;return current+1;});};
 
-      if(!first || !last || !pass1 || !pass2){showMessage("Tölts ki minden mezőt!",false); return;}
-      if(pass1 !== pass2){showMessage("A jelszavak nem egyeznek!",false); return;}
+  // 🔹 Regisztráció Hetesek (Felhasználó / Admin felület)
+  document.getElementById("reg-btn").onclick=()=>{
+    const first=document.getElementById("first-name").value.trim();
+    const last=document.getElementById("last-name").value.trim();
+    const pass1=document.getElementById("reg-pass").value;
+    const pass2=document.getElementById("reg-pass2").value;
+    if(!first||!last||!pass1||!pass2){showMessage("Tölts ki minden mezőt!",false);return;}
+    if(pass1!==pass2){showMessage("A jelszavak nem egyeznek!",false);return;}
 
-      const username = generateUsername(first, last);
+    const username=first.toLowerCase()+"_"+last.toLowerCase()+Math.floor(100+Math.random()*900);
+    const newUserRef=push(db.ref("registeredUsers"));
+    newUserRef.set({username:username,password:pass1}).then(()=>{
+      showMessage(`Sikeres regisztráció! Felhasználónév: ${username}`);
+      renderRegisteredUsers();
+    }).catch(err=>showMessage("Hiba történt: "+err.message,false));
+  };
 
-      const newUserRef = push(ref(db, "users"));
-      set(newUserRef, {username: username, password: pass1})
-        .then(()=>{showMessage(`Sikeres regisztráció! Felhasználónév: ${username}`); renderUsers();})
-        .catch(err=>showMessage("Hiba történt: "+err.message,false));
-    };
-  </script>
+  // 🔹 Login
+  document.getElementById("login-btn").onclick=()=>{
+    const u=document.getElementById("login-user").value.trim();
+    const p=document.getElementById("login-pass").value.trim();
+    usersRef.child(u).get().then(snap=>{
+      if(!snap.exists()||snap.val().pass!==p){showMessage("Hibás adatok!",false);return;}
+      loggedInUser=snap.val();
+      modal.style.display="none";
+      updateLoginInfo();
+      if(loggedInUser.admin) document.getElementById("next-week-btn").style.display="inline-block";
+    });
+  };
+
+  // 🔹 Regisztrált felhasználók listázása
+  function renderRegisteredUsers(){
+    get(db.ref("registeredUsers")).then(snap=>{
+      const container=document.getElementById("users-list");
+      container.innerHTML="";
+      if(!snap.exists()){container.innerHTML="Nincs felhasználó.";}
+      else{
+        Object.values(snap.val()).forEach(user=>{
+          const div=document.createElement("div");
+          div.className="user-box";
+          div.innerHTML=`<span>${user.username}</span><span class="clipboard">📋</span>`;
+          div.querySelector(".clipboard").onclick=()=>{navigator.clipboard.writeText(user.username); showMessage("Felhasználónév a vágólapra másolva!");};
+          container.appendChild(div);
+        });
+      }
+    });
+  }
+
+  renderRegisteredUsers();
+</script>
 </body>
 </html>
