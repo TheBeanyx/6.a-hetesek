@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hetesek 6.A osztály</title>
+  <title>6.A Hetesek - Firebase 9</title>
   <link rel="icon" href="data:," />
   <style>
     :root{--bg1:#0a0f1a;--bg2:#1c2a48;--accent:#00f6ff;--accent-2:#00c8d6;}
@@ -32,7 +32,7 @@
   <h1>6.A osztály – Hetesek</h1>
   <div class="leaderboard">
     <div class="date-box" id="date-box"></div>
-    <div class="name-box" id="names"></div>
+    <div class="name-box" id="names">Betöltés...</div>
     <button id="next-week-btn" class="btn" style="display:none;margin-top:15px;">Következő hetes ➜</button>
   </div>
   <div id="login-info"></div>
@@ -53,57 +53,157 @@
     </div>
   </div>
 
-  <div id="admin-panel">
-    <h2>Admin Panel</h2>
-    <div id="user-list"></div>
-  </div>
-
   <div id="message-box"></div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Firebase 9 modul -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
+      authDomain: "hetesek6a.firebaseapp.com",
+      databaseURL: "https://hetesek6a-default-rtdb.firebaseio.com",
+      projectId: "hetesek6a",
+      storageBucket: "hetesek6a.firebasestorage.app",
+      messagingSenderId: "62186380462",
+      appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f",
+      measurementId: "G-T4F06D2HMK"
+    };
 
-  console.log("SZIA FUTOK!!!");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  // 🔹 SAJÁT Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
-    authDomain: "hetesek6a.firebaseapp.com",
-    databaseURL: "https://console.firebase.google.com/u/0/project/hetesek6a/database/hetesek6a-default-rtdb/data",
-    projectId: "hetesek6a",
-    storageBucket: "hetesek6a.firebasestorage.app",
-    messagingSenderId: "62186380462",
-    appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f",
-    measurementId: "G-T4F06D2HMK"
-  };
+    const namesBox = document.getElementById("names");
+    const dateBox = document.getElementById("date-box");
 
-  // 🔥 Inicializálás
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+    // 🔹 Hetesek lista feltöltése egyszer (ha nincs még a DB-ben)
+    const hetesLista = [
+      ["Árpási Panni","Bertók Márton"],
+      ["Buzás Benedek","Egenhoffer-Végh Edvard"],
+      ["Gamble Elenor Mae","Guardado Alexander Joaquin"],
+      ["Hazuga Károly","Hegyháti Rozália"],
+      ["Hommonay Márton","Kiss Trisztán"],
+      ["Körössy Gréti","Laki Johanna"],
+      ["Marczali Dion","Papp Márton"],
+      ["Parádi Nimród","Radics Tímea"],
+      ["Révész Barnabás","Staudt Márk"],
+      ["Tokai-Barak Márk","Szabó Flóra"],
+      ["Vámosi-Nagy Szonja","Vitári Mátyás"]
+    ];
 
-  // 🔥 Hetesek feltöltése (EGYSZER fut)
-  const hetesLista = [
-    ["Árpási Panni","Bertók Márton"],
-    ["Buzás Benedek","Egenhoffer-Végh Edvard"],
-    ["Gamble Elenor Mae","Guardado Alexander Joaquin"],
-    ["Hazuga Károly","Hegyháti Rozália"],
-    ["Hommonay Márton","Kiss Trisztán"],
-    ["Körössy Gréti","Laki Johanna"],
-    ["Marczali Dion","Papp Márton"],
-    ["Parádi Nimród","Radics Tímea"],
-    ["Révész Barnabás","Staudt Márk"],
-    ["Tokai-Barak Márk","Szabó Flóra"],
-    ["Vámosi-Nagy Szonja","Vitári Mátyás"]
-  ];
+    // Ha nincs DB-ben, csak egyszer állítjuk be
+    get(ref(db, "hetesLista")).then(snap=>{
+      if(!snap.exists()){
+        set(ref(db, "hetesLista"), hetesLista)
+          .then(()=>console.log("Heteslista feltöltve DB-be!"));
+      }
+    });
 
-  db.ref("hetesLista").set(hetesLista).then(()=>{
-    console.log("Heteslista feltöltve Firebase-be");
-  });
-</script>
+    // 🔹 Hetes index létrehozása, ha nincs
+    const hetesIndexRef = ref(db, "hetesIndex");
+    get(hetesIndexRef).then(snap=>{
+      if(!snap.exists()){
+        set(hetesIndexRef, 0);
+      }
+    });
 
+    // 🔹 Hetes megjelenítés
+    function renderHetes(index){
+      get(ref(db, "hetesLista")).then(snap=>{
+        if(snap.exists()){
+          const lista = snap.val();
+          const [n1, n2] = lista[index];
+          namesBox.textContent = `${n1} és ${n2}`;
+        }
+      });
+    }
 
+    // 🔹 Hétfő-péntek dátum
+    function renderWeekRange(){
+      const now = new Date();
+      const day = now.getDay() || 7;
+      const monday = new Date(now); monday.setDate(now.getDate()-(day-1));
+      const friday = new Date(monday); friday.setDate(monday.getDate()+4);
+      const f=d=>d.toLocaleDateString("hu-HU",{year:"numeric",month:"long",day:"numeric"});
+      dateBox.textContent = `${f(monday)} – ${f(friday)}`;
+    }
+    renderWeekRange();
+
+    // 🔹 User management
+    let loggedInUser = null;
+    const superadmin = {user:"benedek_buzas13", pass:"Benedek11", admin:true};
+    const usersRef = ref(db, "users");
+
+    // Superadmin létrehozása, ha nincs
+    get(ref(db, `users/${superadmin.user}`)).then(snap=>{
+      if(!snap.exists()){
+        set(ref(db, `users/${superadmin.user}`), superadmin);
+      }
+    });
+
+    function showMessage(text, success=true){
+      const box = document.getElementById("message-box");
+      box.textContent = text;
+      box.style.background = success ? "#28a745" : "#d9534f";
+      box.style.display = "block";
+      setTimeout(()=>box.style.display="none",2500);
+    }
+
+    function updateLoginInfo(){
+      const box = document.getElementById("login-info");
+      if(!loggedInUser){box.style.display="none"; return;}
+      box.style.display="block";
+      box.innerHTML=`Bejelentkezve: <b>${loggedInUser.user}</b>
+        <button id="logout-btn" class="btn" style="margin-left:15px;">Kijelentkezés</button>`;
+      document.getElementById("logout-btn").onclick = ()=>{loggedInUser=null;updateLoginInfo();document.getElementById("next-week-btn").style.display="none";}
+    }
+
+    // 🔹 AUTH MODAL
+    const modal = document.getElementById("auth-modal");
+    document.getElementById("login-icon").onclick = ()=>modal.style.display="flex";
+    document.getElementById("close-modal").onclick = ()=>modal.style.display="none";
+
+    // 🔹 Hetes index realtime listener
+    onValue(hetesIndexRef, snap=>{
+      if(snap.exists()){
+        renderHetes(snap.val());
+      }
+    });
+
+    // 🔹 Következő hetes gomb (csak adminok)
+    document.getElementById("next-week-btn").onclick = ()=>{
+      runTransaction(hetesIndexRef, current=>{
+        if(current===null) return 0;
+        return (current+1)%hetesLista.length;
+      });
+    };
+
+    // 🔹 Regisztráció
+    document.getElementById("reg-btn").onclick = ()=>{
+      let u = document.getElementById("reg-user").value.trim();
+      let p = document.getElementById("reg-pass").value.trim();
+      if(!u || !p){showMessage("Tölts ki minden mezőt!",false); return;}
+      get(ref(db, `users/${u}`)).then(snap=>{
+        if(snap.exists()){showMessage("Ilyen felhasználó már létezik!",false); return;}
+        set(ref(db, `users/${u}`), {user:u, pass:p, admin:false});
+        showMessage("Sikeres regisztráció!",true);
+      });
+    };
+
+    // 🔹 Login
+    document.getElementById("login-btn").onclick = ()=>{
+      let u = document.getElementById("login-user").value.trim();
+      let p = document.getElementById("login-pass").value.trim();
+      get(ref(db, `users/${u}`)).then(snap=>{
+        if(!snap.exists() || snap.val().pass!==p){showMessage("Hibás adatok!",false); return;}
+        loggedInUser = snap.val();
+        modal.style.display = "none";
+        updateLoginInfo();
+        if(loggedInUser.admin) document.getElementById("next-week-btn").style.display="inline-block";
+      });
+    };
+
+  </script>
 </body>
 </html>
