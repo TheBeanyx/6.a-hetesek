@@ -62,33 +62,45 @@
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <script>
-// Firebase inicializáció
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+<script>
+  // 🔹 SAJÁT Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
+    authDomain: "hetesek6a.firebaseapp.com",
+    databaseURL: "https://hetesek6a-default-rtdb.firebaseio.com",
+    projectId: "hetesek6a",
+    storageBucket: "hetesek6a.firebasestorage.app",
+    messagingSenderId: "62186380462",
+    appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f",
+    measurementId: "G-T4F06D2HMK"
+  };
 
-// 🔹 HETES LISTA FELTÖLTÉSE — EZ FUT FEL TÖLTÉSHEZ
-const hetesLista = [
-  ["Árpási Panni","Bertók Márton"],
-  ["Buzás Benedek","Egenhoffer-Végh Edvard"],
-  ["Gamble Elenor Mae","Guardado Alexander Joaquin"],
-  ["Hazuga Károly","Hegyháti Rozália"],
-  ["Hommonay Márton","Kiss Trisztán"],
-  ["Körössy Gréti","Laki Johanna"],
-  ["Marczali Dion","Papp Márton"],
-  ["Parádi Nimród","Radics Tímea"],
-  ["Révész Barnabás","Staudt Márk"],
-  ["Tokai-Barak Márk","Szabó Flóra"],
-  ["Vámosi-Nagy Szonja","Vitári Mátyás"]
-];
+  // 🔥 Inicializálás
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-// 🔥 EZ TÖLTI FEL A FIREBASE-BE
-db.ref("hetesLista").set(hetesLista).then(()=>{
-  console.log("Heteslista feltöltve Firebase-be");
-});
+  // 🔥 Hetesek feltöltése (EGYSZER fut)
+  const hetesLista = [
+    ["Árpási Panni","Bertók Márton"],
+    ["Buzás Benedek","Egenhoffer-Végh Edvard"],
+    ["Gamble Elenor Mae","Guardado Alexander Joaquin"],
+    ["Hazuga Károly","Hegyháti Rozália"],
+    ["Hommonay Márton","Kiss Trisztán"],
+    ["Körössy Gréti","Laki Johanna"],
+    ["Marczali Dion","Papp Márton"],
+    ["Parádi Nimród","Radics Tímea"],
+    ["Révész Barnabás","Staudt Márk"],
+    ["Tokai-Barak Márk","Szabó Flóra"],
+    ["Vámosi-Nagy Szonja","Vitári Mátyás"]
+  ];
+
+  db.ref("hetesLista").set(hetesLista).then(()=>{
+    console.log("Heteslista feltöltve Firebase-be");
+  });
 </script>
+
 
 </body>
 </html>
