@@ -1,219 +1,418 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>6.A Hetesek - Firebase</title>
-<link rel="icon" href="data:,">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>6. A osztály platformja</title>
+
 <style>
-:root{--bg1:#0a0f1a;--bg2:#1c2a48;--accent:#00f6ff;--accent-2:#00c8d6;}
-body{margin:0;font-family:"Segoe UI",Tahoma,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px;min-height:100vh;box-sizing:border-box;}
-h1{margin:18px 0 6px;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);text-shadow:0 0 14px rgba(0,246,255,0.15);}
-.leaderboard{width:100%;max-width:760px;background:rgba(34,34,34,0.92);border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,246,255,0.06);box-sizing:border-box;text-align:center;font-size:1.3rem;}
-.name-box{margin-top:20px;padding:16px;border-radius:12px;background:#111a;font-size:1.4rem;font-weight:600;letter-spacing:0.5px;box-shadow:0 8px 20px rgba(0,246,255,0.05);}
-.date-box{margin-top:12px;font-size:1.1rem;opacity:0.9;}
-#login-icon{position:fixed;top:14px;right:14px;font-size:1.9rem;background:transparent;border:none;color:var(--accent);cursor:pointer;z-index:999;}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:1000;}
-.modal-content{background:#1c1c1c;padding:20px;border-radius:12px;width:90%;max-width:400px;color:white;text-align:center;}
-.modal input{width:90%;padding:10px;margin:8px 0;border-radius:8px;border:none;}
-.btn{background:var(--accent);padding:10px 20px;border:none;border-radius:8px;font-size:1rem;cursor:pointer;margin:6px;}
-.btn:hover{background:var(--accent-2);}
-#login-info{margin-top:20px;padding:12px 20px;background:#111a;border-radius:12px;display:none;font-size:1.1rem;}
-#next-week-btn{display:none;margin-top:15px;}
-#admin-panel{display:none;margin-top:20px;padding:20px;background:#111a;border-radius:12px;max-width:600px;width:100%;}
-.admin-user-row{background:#222;padding:10px;margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
-.admin-user-row button{margin-left:4px;padding:6px 10px;border-radius:6px;}
-#message-box{position: fixed;bottom: 20px;left: 50%;transform: translateX(-50%);background: #28a745;padding: 14px 24px;border-radius: 10px;color: white;font-size: 1.1rem;display: none;box-shadow: 0 8px 20px rgba(0,0,0,0.3);z-index: 2000;animation: fadeIn 0.3s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-.copy-btn{margin-left:10px;background:var(--accent-2);border-radius:6px;padding:2px 6px;cursor:pointer;}
+:root{--bg:#f5f7fb;--card:#fff;--accent:#2b6cb0;--muted:#6b7280}
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#111}
+.container{max-width:980px;margin:28px auto;padding:20px}
+header{display:flex;align-items:center;gap:16px}
+.logo{width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#4aa3e0); display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px}
+h1{margin:0;font-size:20px}
+p.lead{margin:4px 0 0;color:var(--muted)}
+.nav{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.icon-btn{flex:1 1 120px;padding:10px;border-radius:10px;background:var(--accent);color:white;border:none; cursor:pointer;font-weight:600;text-align:center;transition:background 0.2s}
+.icon-btn:hover{background:#1e4e8c}
+main{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-top:20px}
+.card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(16,24,40,0.04); border:1px solid rgba(16,24,40,0.03)}
+.feed{display:flex;flex-direction:column;gap:12px}
+.new-post{display:flex;gap:10px}
+.new-post input, .new-post input[type="date"]{flex:1;padding:10px;border-radius:8px;border:1px solid #e6e9ee}
+.new-post textarea{flex:1;padding:10px;border-radius:8px;border:1px solid #e6e9ee;resize:none}
+.new-post button{padding:10px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+.post{padding:12px;border-radius:8px;background:linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid #eef2f7}
+.post small{color:var(--muted)}
+.post button{margin-right:6px;padding:4px 8px;border:none;border-radius:6px;background:#2b6cb0;color:white;cursor:pointer;font-size:13px;}
+.post button:hover{background:#1e4e8c;}
+footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
+.modal-bg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55); display:flex;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;padding:24px;width:90%;max-width:360px;border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.2);animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)}}
+.modal h2{text-align:center;margin-top:0}
+.modal input{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid #d3d7df}
+.modal button{width:100%;margin-top:14px;padding:10px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-size:15px;}
+.switch{margin-top:12px;text-align:center;font-size:14px;color:var(--muted);cursor:pointer;}
+.event-form input, .event-form input[type="date"], .event-form textarea {
+  display:block;width:100%;padding:8px 10px;margin-top:8px;border-radius:8px;border:3px solid #225eab;background:#1e4e8c;font-size:14px;color:white;transition: all 0.2s ease;
+}
+.event-form input:focus, .event-form textarea:focus { border-color:#225eab; background:#1e4e8c; outline:none; }
+.event-form button { display:block;margin-top:10px;padding:10px 14px;font-size:15px;background:#1e3a6b;color:white;border:none;border-radius:8px;cursor:pointer;transition:background 0.2s ease; }
+.event-form button:hover { background:#15305a; }
+
+/* Calendar styles */
+#calendarModalBg { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.55); align-items:center; justify-content:center; z-index:9999; }
+#calendarModal { background:#fff; padding:24px; width:95%; max-width:900px; max-height:90%; overflow-y:auto; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
+#calendarContent table { width:100%; border-collapse:collapse; text-align:center; font-size:16px; margin-top:10px; }
+#calendarContent th, #calendarContent td { border:1px solid #ccc; padding:12px; }
+#calendarContent th { background:#2b6cb0; color:white; }
+#calendarContent td:hover { background:#e6eef8; cursor:pointer; }
+#calendarNav { display:flex; justify-content:space-between; margin-bottom:10px; }
+#calendarNav button { padding:6px 12px; background:#1e3a6b; color:white; border:none; border-radius:6px; cursor:pointer; }
+#calendarNav button:hover { background:#15305a; }
+
+/* Órarend gombok kisebbek */
+.timetable-btn { font-size:14px; padding:6px 10px; flex: unset; }
+/* Órarend nagyobb iframe */
+#timetable iframe { height:900px; }
 </style>
 </head>
+
 <body>
 
-<button id="login-icon">🔑</button>
-<h1>6.A osztály – Hetesek</h1>
-
-<div class="leaderboard">
-  <div class="date-box" id="date-box"></div>
-  <div class="name-box" id="names"></div>
-  <button id="next-week-btn" class="btn">Következő hetes ➜</button>
-</div>
-
-<div id="login-info"></div>
-
-<div id="auth-modal" class="modal">
-  <div class="modal-content">
-    <h2>Belépés / Regisztráció</h2>
-    <input id="reg-name" placeholder="Keresztnév">
-    <input id="reg-surname" placeholder="Vezetéknév">
-    <input id="reg-pass" type="password" placeholder="Jelszó">
-    <input id="reg-pass2" type="password" placeholder="Jelszó megerősítése">
-    <button id="reg-btn" class="btn">Regisztráció</button>
-    <br><br>
-    <input id="login-user" placeholder="Felhasználónév">
-    <input id="login-pass" type="password" placeholder="Jelszó">
-    <button id="login-btn" class="btn">Belépés</button>
-    <br><br>
-    <button id="close-modal" class="btn" style="background:#555;">Bezárás</button>
-    <div id="reg-result" style="margin-top:10px;"></div>
+<!-- AUTH MODAL -->
+<div class="modal-bg" id="authModal">
+  <div class="modal" id="modalBox">
+    <h2 id="modalTitle">Bejelentkezés</h2>
+    <input id="email" type="text" placeholder="E-mail">
+    <input id="pass" type="password" placeholder="Jelszó">
+    <button id="modalBtn">Belépés</button>
+    <div class="switch" id="switchBtn">Nincs fiókod? Regisztrálj</div>
   </div>
 </div>
 
-<div id="admin-panel">
-  <h2>Admin Panel</h2>
-  <div id="user-list"></div>
+<div class="container">
+<header>
+  <div class="logo">6A</div>
+  <div>
+    <h1>6. A osztályplatformja</h1>
+    <p class="lead">Gyors hozzáférés: üzenőfal, órarend, naptár és események</p>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="icon-btn" onclick="showPage('home')">Főoldal</button>
+  <button class="icon-btn" onclick="showPage('hetesek')">Hetesek</button>
+  <button class="icon-btn" onclick="showPage('events')">Események</button>
+  <button class="icon-btn" onclick="showPage('timetable')">Órarend</button>
+  <button class="icon-btn" onclick="showPage('homework')">Házifeladatok</button>
+  <button class="icon-btn" onclick="showPage('tests')">Dolgozatok</button>
+  <button class="icon-btn" onclick="showPage('account')">Fiók</button>
+</nav>
+
+<div id="pages">
+<main id="home" style="display:block">
+  <section class="card">
+    <h2>Üzenőfal</h2>
+    <div class="feed" id="feedMessages"></div>
+  </section>
+</main>
+
+<main id="events" style="display:none">
+  <section class="card">
+    <h2>Események</h2>
+    <div style="display:grid; grid-template-columns:1fr 200px; gap:16px;">
+      <div>
+        <div class="event-form">
+          <input id="eventTitle" type="text" placeholder="Cím">
+          <input id="eventDate" type="date">
+          <input id="eventLocation" type="text" placeholder="Helyszín">
+          <textarea id="eventDesc" placeholder="Leírás (rövid)"></textarea>
+          <button onclick="postEvent()">Közzététel</button>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column;">
+        <button id="calendarButton" onclick="showCalendar()" style="
+          width:100%; padding:16px; font-size:18px; 
+          background:linear-gradient(135deg,#2b6cb0,#4aa3e0);
+          color:white; border:none; border-radius:12px; cursor:pointer; 
+          margin-bottom:12px; transition: transform 0.2s;">
+          Naptár megnyitása
+        </button>
+        <div class="feed" id="eventsList" style="overflow-y:auto; max-height:500px;"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<main id="hetesek" style="display:none">
+  <section class="card">
+    <h2>Hetesek</h2>
+    <p>Itt lesznek a heti felelősök.</p>
+  </section>
+</main>
+
+<main id="timetable" style="display:none">
+  <section class="card">
+    <h2>Órarend</h2>
+    <div style="display:flex; flex-direction:column; gap:10px; max-width:300px; margin-bottom:16px;">
+      <button class="icon-btn timetable-btn" onclick="showSchedule('all')">Mindenki</button>
+      <div style="margin-left:20px; display:flex; flex-direction:column; gap:6px;">
+        <span style="font-weight:600;">International, Cambridge</span>
+        <button class="icon-btn timetable-btn" onclick="showSchedule('group1')">1. csoport</button>
+        <button class="icon-btn timetable-btn" onclick="showSchedule('group2')">2. csoport</button>
+        <button class="icon-btn timetable-btn" onclick="showSchedule('group3')">3. csoport</button>
+      </div>
+    </div>
+    <iframe id="scheduleFrame" style="width:100%; height:900px; border:1px solid #ccc; border-radius:8px; display:none;"></iframe>
+  </section>
+</main>
+
+<main id="homework" style="display:none">
+  <section class="card">
+    <h2>Házifeladatok</h2>
+    <div class="event-form">
+      <input id="homeworkTitle" type="text" placeholder="Cím">
+      <input id="homeworkDue" type="date">
+      <textarea id="homeworkDesc" placeholder="Leírás (rövid)"></textarea>
+      <button onclick="postHomework()">Küldés</button>
+    </div>
+    <div class="feed" id="homeworkList"></div>
+  </section>
+</main>
+
+<main id="tests" style="display:none">
+  <section class="card">
+    <h2>Dolgozatok</h2>
+    <div class="event-form">
+      <input id="testTitle" type="text" placeholder="Dolgozat címe">
+      <input id="testDue" type="date">
+      <textarea id="testDesc" placeholder="Rövid leírás"></textarea>
+      <button onclick="postTest()">Küldés</button>
+    </div>
+    <div class="feed" id="testList"></div>
+  </section>
+</main>
+
+<main id="account" style="display:none">
+  <section class="card">
+    <h2>Fiók</h2>
+    <p>Bejelentkezve mint:</p>
+    <strong id="userEmail"></strong><br><br>
+    <button onclick="logout()">Kijelentkezés</button>
+  </section>
+</main>
+
+</div>
+<footer>© 6. A • Platform</footer>
 </div>
 
-<div id="message-box"></div>
+<!-- Calendar Modal -->
+<div id="calendarModalBg">
+  <div id="calendarModal">
+    <div id="calendarNav">
+      <button onclick="changeMonth(-1)">&#8592; Előző</button>
+      <button onclick="changeMonth(1)">Következő &#8594;</button>
+      <button onclick="closeCalendar()">Bezárás</button>
+    </div>
+    <div id="calendarContent"></div>
+  </div>
+</div>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script>
-// 🔹 Hetesek Firebase
-const hetesConfig = {
-  apiKey: "AIzaSyBKkH5fTCZ4HprZ8KOIxkxdgVRfOIUw3-M",
-  authDomain: "hetesek6a.firebaseapp.com",
-  databaseURL: "https://hetesek6a-default-rtdb.firebaseio.com",
-  projectId: "hetesek6a",
-  storageBucket: "hetesek6a.appspot.com",
-  messagingSenderId: "62186380462",
-  appId: "1:62186380462:web:a3c54df5d96d4c9ec0213f",
+const firebaseConfig = {
+  apiKey: "AIzaSyDMNqLUo7hdMzIsqZruYZ-oh6f7pDRW2u4",
+  authDomain: "platform6a.firebaseapp.com",
+  projectId: "platform6a",
+  storageBucket: "platform6a.firebasestorage.app",
+  messagingSenderId: "228821688436",
+  appId: "1:228821688436:web:dc82875e340dcff4cdb121"
 };
-firebase.initializeApp(hetesConfig);
-const db = firebase.database();
 
-// Hetesek lista
-const hetesLista = [
-  ["Árpási Panni","Bertók Márton"],
-  ["Buzás Benedek","Egenhoffer-Végh Edvard"],
-  ["Gamble Elenor Mae","Guardado Alexander Joaquin"],
-  ["Hazuga Károly","Hegyháti Rozália"],
-  ["Hommonay Márton","Kiss Trisztán"],
-  ["Körössy Gréti","Laki Johanna"],
-  ["Marczali Dion","Papp Márton"],
-  ["Parádi Nimród","Radics Tímea"],
-  ["Révész Barnabás","Staudt Márk"],
-  ["Tokai-Barak Márk","Szabó Flóra"],
-  ["Vámosi-Nagy Szonja","Vitári Mátyás"]
-];
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
 
-const namesBox = document.getElementById("names");
-let hetesIndex = 0;
-function renderHetes(index){
-  const [n1,n2] = hetesLista[index];
-  namesBox.textContent = `${n1} és ${n2}`;
-}
-renderHetes(hetesIndex);
-function renderWeekRange(){
-  const now = new Date();
-  const day = now.getDay() || 7;
-  const monday = new Date(now); monday.setDate(now.getDate()-(day-1));
-  const friday = new Date(monday); friday.setDate(monday.getDate()+4);
-  const f=d=>d.toLocaleDateString("hu-HU",{year:"numeric",month:"long",day:"numeric"});
-  document.getElementById("date-box").textContent = `${f(monday)} – ${f(friday)}`;
-}
-renderWeekRange();
-
-// 🔹 Regisztrált felhasználók Firebase
-const usersConfig = {
-  apiKey: "AIzaSyCn3leDSuRAYYN4RdMtvU3XBlrR4P4_vWk",
-  authDomain: "hetesek-6a-registeredusers.firebaseapp.com",
-  databaseURL: "https://hetesek-6a-registeredusers-default-rtdb.firebaseio.com",
-  projectId: "hetesek-6a-registeredusers",
-  storageBucket: "hetesek-6a-registeredusers.firebasestorage.app",
-  messagingSenderId: "221961476284",
-  appId: "1:221961476284:web:08d2b42f7b3ab44bd458b9",
+/* NAV */
+window.showPage = function(page){
+  ["home","events","hetesek","timetable","homework","tests","account"].forEach(p=>document.getElementById(p).style.display="none");
+  document.getElementById(page).style.display="grid";
+  if(page==="home") loadMessages();
+  if(page==="events") loadEvents();
+  if(page==="homework") loadHomework();
+  if(page==="tests") loadTests();
 };
-const app2 = firebase.initializeApp(usersConfig,"usersApp");
-const usersDb = firebase.database(app2);
 
-// Superadmin
-const superadmin = {username:"benedek_buzas13", password:"Benedek11", admin:true};
-usersDb.ref("users/"+superadmin.username).set(superadmin);
+/* AUTH */
+const modalTitle = document.getElementById("modalTitle");
+const modalBtn = document.getElementById("modalBtn");
+const switchBtn = document.getElementById("switchBtn");
+const authModal = document.getElementById("authModal");
+let isLogin = true;
 
-// 🔹 Message helper
-function showMessage(text, success=true){
-  const box = document.getElementById("message-box");
-  box.textContent = text;
-  box.style.background = success ? "#28a745" : "#d9534f";
-  box.style.display = "block";
-  setTimeout(()=>box.style.display="none",2500);
+function switchForm(){
+  if(isLogin){
+    modalTitle.textContent="Regisztráció";
+    modalBtn.textContent="Regisztráció";
+    modalBtn.onclick=register;
+    switchBtn.textContent="Van már fiókod? Jelentkezz be";
+  } else {
+    modalTitle.textContent="Bejelentkezés";
+    modalBtn.textContent="Belépés";
+    modalBtn.onclick=login;
+    switchBtn.textContent="Nincs fiókod? Regisztrálj";
+  }
+  isLogin=!isLogin;
+}
+switchBtn.addEventListener("click", switchForm);
+
+async function login(){ 
+  try{ await signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("pass").value);} 
+  catch(err){ alert("Hiba: "+err.message); } 
+}
+async function register(){ 
+  try{ await createUserWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("pass").value);} 
+  catch(err){ alert("Hiba: "+err.message); } 
 }
 
-// 🔹 Modal
-const modal = document.getElementById("auth-modal");
-document.getElementById("login-icon").onclick = ()=>modal.style.display="flex";
-document.getElementById("close-modal").onclick = ()=>modal.style.display="none";
+onAuthStateChanged(auth,user=>{
+  if(user){ authModal.style.display="none"; document.getElementById("userEmail").textContent=user.email; showPage("home"); }
+  else authModal.style.display="flex";
+});
 
-// 🔹 Regisztráció
-document.getElementById("reg-btn").onclick = ()=>{
-  const name = document.getElementById("reg-name").value.trim();
-  const surname = document.getElementById("reg-surname").value.trim();
-  const pass1 = document.getElementById("reg-pass").value.trim();
-  const pass2 = document.getElementById("reg-pass2").value.trim();
-  if(!name || !surname || !pass1 || !pass2){showMessage("Tölts ki minden mezőt!",false); return;}
-  if(pass1!==pass2){showMessage("A jelszavak nem egyeznek!",false); return;}
-  const rand = Math.floor(Math.random()*1000);
-  const username = `${name.toLowerCase()}_${surname.toLowerCase()}${rand}`;
-  usersDb.ref("users/"+username).set({username, password: pass1, admin:false}).then(()=>{
-    document.getElementById("reg-result").innerHTML = `Felhasználónév: <b>${username}</b> <span class="copy-btn" onclick="navigator.clipboard.writeText('${username}').then(()=>alert('Másolva!'))">📋</span>`;
-    showMessage("Sikeres regisztráció!",true);
-    loadAdminPanel(); // admin panel frissítés
-  }).catch(err=>{
-    showMessage("Hiba történt: "+err,false);
-  });
+/* ÜZENŐFAL */
+window.postMessage = async function(){
+  const input = document.getElementById("newPostInput");
+  if(!input.value.trim()) return;
+  await addDoc(collection(db,"messages"),{ text:input.value, user:auth.currentUser.email, time:serverTimestamp() });
+  input.value=""; loadMessages();
 };
-
-// 🔹 Belépés
-let loggedInUser = null;
-document.getElementById("login-btn").onclick = ()=>{
-  const user = document.getElementById("login-user").value.trim();
-  const pass = document.getElementById("login-pass").value.trim();
-  if(!user || !pass){showMessage("Tölts ki minden mezőt!",false); return;}
-  usersDb.ref("users/"+user).get().then(snap=>{
-    if(!snap.exists() || snap.val().password!==pass){showMessage("Hibás adatok!",false); return;}
-    modal.style.display="none";
-    loggedInUser = snap.val();
-    document.getElementById("login-info").innerHTML = `Bejelentkezve: <b>${user}</b>`;
-    document.getElementById("login-info").style.display="block";
-    if(loggedInUser.admin) {
-      document.getElementById("next-week-btn").style.display="inline-block";
-      document.getElementById("admin-panel").style.display="block";
-      loadAdminPanel();
-    }
-    showMessage("Sikeres belépés!",true);
-  }).catch(err=>{
-    showMessage("Hiba történt: "+err,false);
-  });
-};
-
-// 🔹 Következő hetes (csak admin)
-document.getElementById("next-week-btn").onclick = ()=>{
-  hetesIndex = (hetesIndex+1)%hetesLista.length;
-  renderHetes(hetesIndex);
-};
-
-// 🔹 Admin panel
-function loadAdminPanel(){
-  const listDiv = document.getElementById("user-list");
-  usersDb.ref("users").get().then(snap=>{
-    if(!snap.exists()) return;
-    listDiv.innerHTML="";
-    Object.values(snap.val()).forEach(user=>{
-      if(user.username===superadmin.username) return; // superadmin mindig admin
-      const div = document.createElement("div");
-      div.className="admin-user-row";
-      div.innerHTML=`<span>${user.username}</span> <button>${user.admin?'Admin visszavon':'Admin ad'}</button>`;
-      const btn = div.querySelector("button");
-      btn.onclick = ()=>{
-        usersDb.ref("users/"+user.username+"/admin").set(!user.admin).then(()=>loadAdminPanel());
-      };
-      listDiv.appendChild(div);
-    });
+async function loadMessages(){
+  const feed=document.getElementById("feedMessages");
+  feed.innerHTML=`<div class="new-post"><input id="newPostInput" type="text" placeholder="Írj egy rövid üzenetet..."><button onclick="postMessage()">Küldés</button></div>`;
+  const snap = await getDocs(query(collection(db,"messages"), orderBy("time","desc")));
+  snap.forEach(docSnap=>{
+    const d=docSnap.data(), id=docSnap.id;
+    const isOwner=auth.currentUser && auth.currentUser.email===d.user;
+    const item=document.createElement("div");
+    item.className="post";
+    item.innerHTML=`<strong>${d.user}</strong><br><div style="margin-top:8px" id="text-${id}">${d.text}</div>${isOwner?'<div style="margin-top:6px"><button onclick="editMessage(\''+id+'\')">Szerkesztés</button></div>':""}`;
+    feed.appendChild(item);
   });
 }
+
+/* HÁZIFELADATOK */
+window.postHomework = async function(){
+  const title=document.getElementById("homeworkTitle").value.trim();
+  const due=document.getElementById("homeworkDue").value;
+  const desc=document.getElementById("homeworkDesc").value.trim();
+  if(!title||!due) return alert("A cím és a határidő kötelező!");
+  await addDoc(collection(db,"homeworks"),{ title,due,desc,user:auth.currentUser.email,time:serverTimestamp() });
+  document.getElementById("homeworkTitle").value="";
+  document.getElementById("homeworkDue").value="";
+  document.getElementById("homeworkDesc").value="";
+  loadHomework();
+};
+async function loadHomework(){
+  const list=document.getElementById("homeworkList"); list.innerHTML="";
+  const snap=await getDocs(query(collection(db,"homeworks"),orderBy("due","asc")));
+  snap.forEach(docSnap=>{
+    const d=docSnap.data();
+    const div=document.createElement("div");
+    div.className="post";
+    div.innerHTML=`<strong>${d.title}</strong><br><small>Határidő: ${d.due}</small><div style="margin-top:6px">${d.desc}</div>`;
+    list.appendChild(div);
+  });
+}
+
+/* DOLGOZATOK */
+window.postTest = async function(){
+  const title = document.getElementById("testTitle").value.trim();
+  const due = document.getElementById("testDue").value;
+  const desc = document.getElementById("testDesc").value.trim();
+  if(!title || !due) return alert("A cím és a határidő kötelező!");
+  
+  await addDoc(collection(db, "tests"), {
+    title,
+    due,
+    desc,
+    user: auth.currentUser.email,
+    time: serverTimestamp()
+  });
+
+  document.getElementById("testTitle").value = "";
+  document.getElementById("testDue").value = "";
+  document.getElementById("testDesc").value = "";
+  
+  loadTests();
+};
+
+async function loadTests() {
+  const list = document.getElementById("testList");
+  list.innerHTML = "";
+  const snap = await getDocs(query(collection(db, "tests"), orderBy("due", "asc")));
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+    const div = document.createElement("div");
+    div.className = "post";
+    div.innerHTML = `<strong>${d.title}</strong><br><small>Határidő: ${d.due}</small><div style="margin-top:6px">${d.desc}</div>`;
+    list.appendChild(div);
+  });
+}
+
+/* LOGOUT */
+window.logout=async function(){ await auth.signOut(); };
+
+/* NAPTÁR */
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+window.showCalendar = async function() { document.getElementById("calendarModalBg").style.display="flex"; renderCalendar(currentYear,currentMonth); };
+function closeCalendar() { document.getElementById("calendarModalBg").style.display="none"; }
+
+async function renderCalendar(year,month){
+  const container=document.getElementById("calendarContent");
+  container.innerHTML="";
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const snap=await getDocs(collection(db,"events"));
+  const events={};
+  snap.forEach(docSnap=>{
+    const d=docSnap.data();
+    events[d.date]=events[d.date]||[];
+    events[d.date].push(d.title);
+  });
+
+  let table=`<table><tr style="background:#2b6cb0;color:white;"><th colspan="7">${year} - ${month+1}</th></tr>
+    <tr style="background:#e6eef8;"><th>V</th><th>H</th><th>K</th><th>Sze</th><th>Cs</th><th>P</th><th>Sz</th></tr><tr>`;
+
+  for(let i=0;i<firstDay;i++) table+="<td></td>";
+  for(let day=1;day<=daysInMonth;day++){
+    const cellDate=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    let cellContent=day;
+    if(events[cellDate]) cellContent+="<br>"+events[cellDate].join("<br>");
+    table+=`<td>${cellContent}</td>`;
+    if((day+firstDay)%7===0) table+="</tr><tr>";
+  }
+  table+="</tr></table>";
+  container.innerHTML=table;
+}
+
+window.changeMonth=function(offset){
+  currentMonth+=offset;
+  if(currentMonth>11){ currentMonth=0; currentYear++; }
+  if(currentMonth<0){ currentMonth=11; currentYear--; }
+  renderCalendar(currentYear,currentMonth);
+};
+
+/* ÓRAREND */
+window.showSchedule = function(group) {
+  const iframe = document.getElementById("scheduleFrame");
+  iframe.style.display = "block";
+  switch(group) {
+    case 'all':
+      iframe.src = ""; // ide mindenki táblázat link
+      break;
+    case 'group1':
+      iframe.src = "https://docs.google.com/spreadsheets/d/1hl6Nn3QWHNvdxXjttVuXDs0GRnYocAi244V0UAzV0qI/preview";
+      break;
+    case 'group2':
+      iframe.src = "https://docs.google.com/spreadsheets/d/1Gl8B5ITci1iFanSoDvQ_ogzj_lTyjSBqYuzXbMXjdhs/preview";
+      break;
+    case 'group3':
+      iframe.src = "https://docs.google.com/spreadsheets/d/1oLSYYaoOnHLLEdSVZowbK8XHsCwGb2pJ_xLWoT2CzZE/preview";
+      break;
+  }
+};
+
+window.onload=()=>{ showPage("home"); };
 </script>
 </body>
 </html>
